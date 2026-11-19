@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CASSIE OS — Command center</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<svg class="symbols" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+<symbol id="i-orbit" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><ellipse cx="12" cy="12" rx="4" ry="8" transform="rotate(45 12 12)"/><circle cx="12" cy="12" r="1"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></symbol>
+<symbol id="i-web" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></symbol>
+<symbol id="i-net" viewBox="0 0 24 24"><path d="M2 8a16 16 0 0 1 20 0M5 12a11 11 0 0 1 14 0M8 16a6 6 0 0 1 8 0"/><circle cx="12" cy="20" r="1"/></symbol>
+<symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m7 9 3 3-3 3m5 0h5"/></symbol>
+<symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11v1a7 7 0 0 0 14 0v-1m-7 8v3m-3 0h6"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15m-6-6 6 6-6 6"/></symbol>
+</defs></svg>
+<div class="shell">
+<aside class="rail">
+<img class="insignia" src="insignia.webp" alt="C.A.S.S.I.E. — Central Autonomic Service System for Internal Emergencies">
+<div class="rail-label">CONTROL CONSOLE</div>
+<nav aria-label="Console">
+<button class="nav current" data-page="command" aria-current="page"><svg><use href="#i-orbit"/></svg>Command<span>01</span></button>
+<button class="nav" data-page="awareness"><svg><use href="#i-eye"/></svg>Awareness<span>02</span></button>
+<button class="nav" data-page="modules"><svg><use href="#i-grid"/></svg>System modules<span>03</span></button>
+<button class="nav" data-page="network"><svg><use href="#i-net"/></svg>Network<span>04</span></button>
+<button class="nav" data-page="knowledge"><svg><use href="#i-web"/></svg>Knowledge web<span>05</span></button>
+<button class="nav" data-page="workshop"><svg><use href="#i-terminal"/></svg>Workshop<span>06</span></button>
+</nav>
+<div class="rail-bottom"><div class="node-icon">T</div><div><strong>TitanGame</strong><small id="rail-status">LOCAL NODE</small></div></div>
+</aside>
+<main class="main">
+<header class="topbar"><span><b>CASSIE OS</b><i>/</i><span id="crumb">Command</span></span><div><span id="clock"></span><span id="mode" class="chip"><b></b> LOCAL CONSOLE</span><button id="lock" class="quiet" hidden>Lock</button></div></header>
+<div class="page" id="command">
+<div class="intro"><div><p class="kicker"><span></span> CENTRAL COMMAND</p><h1>Command center<span>.</span></h1><p>CASSIE’s presence, system health, and live activity.</p></div><button class="outline" data-jump="awareness"><svg><use href="#i-mic"/></svg> Voice &amp; vision <span>↗</span></button></div>
+<div class="command-grid">
+<section class="panel presence" id="presence" data-state="nominal">
+<div class="panel-head"><span><b class="dot"></b> CASSIE PRESENCE</span><span id="orb-tag">STATE / 00</span></div>
+<div class="orb-stage"><canvas id="orb" aria-hidden="true"></canvas><div class="orb-label"><span id="orb-indicator">◉</span><div><strong id="orb-title">Nominal</strong><small id="orb-text">Systems ready · awaiting input</small></div></div></div>
+<div id="scenarios" class="scenarios" hidden aria-label="Simulate a console state"><span>SIMULATE</span><button data-state="nominal" aria-pressed="true">◉ Nominal</button><button data-state="omega" aria-pressed="false">Ω Omega</button><button data-state="delta" aria-pressed="false">Δ Delta</button><button data-state="gamma" aria-pressed="false">γ Gamma</button></div>
+<div id="live-strip" class="scenarios" hidden><span>MODE</span><button data-state="nominal">Reset expression</button><button data-state="gamma">γ Happy expression</button></div>
+</section>
+<section class="panel sentinel">
+<div class="panel-head"><span><b class="dot"></b> SENTINEL</span><span>01—03</span></div>
+<div class="sentinel-body">
+<div class="sentry red"><b>Ω</b><div><strong>Omega Red</strong><small>Integrity &amp; containment</small></div><span id="s-omega">CLEAR</span></div>
+<div class="sentry yellow"><b>Δ</b><div><strong>Delta Yellow</strong><small>Device presence</small></div><span id="s-delta">CLEAR</span></div>
+<div class="sentry green"><b>γ</b><div><strong>Gamma Green</strong><small>Persona expression</small></div><span id="s-gamma">CALM</span></div>
+<div class="activity"><p class="kicker">LATEST SIGNAL</p><strong id="signal-title">Standing by.</strong><p id="signal-text">Waiting for the local console.</p></div>
+</div>
+</section>
+</div>
+<div class="lower-grid">
+<section class="panel exchange"><div class="panel-head"><span><b class="dot"></b> TALK TO CASSIE</span><label class="check"><input type="checkbox" id="speak"> Speak replies</label></div><div class="talk-controls">
+<button class="outline talk-start" id="talk-toggle"><svg aria-hidden="true"><use href="#i-mic"/></svg> <span id="talk-label">Start conversation</span></button>
+<button class="quiet" id="talk-record">Record a question</button><button class="quiet" data-jump="awareness">Mic settings</button><button class="quiet" id="clear-command">Clear conversation</button>
+<p id="conversation-status" role="status">Start talking, or record one question.</p>
+</div><div class="chat-log" id="chat-log" role="log" aria-label="Conversation"></div>
+<details class="type-instead" id="type-instead"><summary>Type instead</summary><form id="chat-form" class="composer"><input id="message" aria-label="Message CASSIE" placeholder="Ask CASSIE anything…" maxlength="4800" autocomplete="off"><button type="submit" id="send" aria-label="Send message"><svg><use href="#i-arrow"/></svg></button></form></details></section>
+<section class="panel overview"><div class="panel-head"><span><b class="dot"></b> MODULE SNAPSHOT</span><button class="quiet" data-jump="modules">Inspect ↗</button></div><div id="mini-modules"></div></section>
+</div>
+</div>
+<div class="page" id="awareness" hidden>
+<div class="intro"><div><p class="kicker"><span></span> SENSORY INPUT</p><h1>Awareness<span>.</span></h1><p>See what CASSIE sees, and decide when she listens.</p></div></div>
+<div class="split"><section class="panel padded"><h2>Camera</h2><p id="camera-status" role="status">Camera is off. Frames are processed locally when detection is enabled.</p>
+<div id="always-slot"></div><p id="camera-sight" class="muted" hidden></p><button class="outline" id="camera-look" hidden>Ask what CASSIE sees</button>
+<div class="camera-frame" id="camera-frame"><video id="camera" muted autoplay playsinline hidden></video><div id="boxes" aria-hidden="true"></div><svg id="camera-idle"><use href="#i-eye"/></svg><div class="camera-mock" id="camera-mock" hidden><span>DEMO FRAME</span><div class="demo-box mug">Cup</div><div class="demo-box desk">Laptop</div></div></div>
+<div class="row"><button class="outline" id="always-start" hidden>Turn on always-on camera</button><button class="outline" id="camera-toggle">Start camera</button><label class="check" id="detect-option"><input type="checkbox" id="detect"> Outline objects</label><label class="check"><input type="checkbox" id="commentary"> Occasional comments</label></div><p id="always-help" class="muted" hidden>Always-on mode uses the camera on this PC and draws outlines automatically. It keeps observing after lock, sign-out, and restart, until you stop it.</p><p id="observation" class="observation" aria-live="polite"></p></section>
+<section class="panel padded"><h2>Microphone and voice</h2>
+<label class="field">Microphone input<select id="mic-device"><option value="">System default</option></select></label>
+<div class="row mic-reading"><meter id="mic-level" min="0" max="1" value="0" aria-label="Microphone signal"></meter><span id="mic-input-name">Enable the microphone to identify the input.</span></div>
+<p id="voice-status" role="status">Microphone is off.</p>
+<div class="row"><button class="outline" id="mic-toggle">Enable microphone</button><button class="outline" id="test-voice">Test speaker</button></div>
+<p class="muted">Choose your webcam microphone and speak to check the meter. Say “CASSIE” to start, or use Record a question in Command. Audio is transcribed on this PC.</p></section></div>
+</div>
+<div class="page" id="modules" hidden>
+<div class="intro"><div><p class="kicker"><span></span> HARDWARE &amp; SERVICES</p><h1>System modules<span>.</span></h1><p>Storage, memory, speech, decisions, diagnostics, and standby.</p></div><button class="outline" id="refresh">Refresh readings</button></div>
+<div class="module-grid" id="module-grid"></div></div>
+<div class="page" id="network" hidden>
+<div class="intro"><div><p class="kicker"><span></span> OWNER NETWORK</p><h1>CASSIE-NET<span>.</span></h1><p>Check for authorized devices on the hotspot.</p></div></div>
+<section class="panel padded"><div class="row"><h2>Observed neighbors</h2><span class="chip" id="network-status">UNCONFIGURED</span></div><p>Device addresses and presence come from the configured hotspot interface. Sleeping devices may go quiet. The console does not read clients’ traffic or files.</p><div id="network-list"></div></section></div>
+<div class="page" id="knowledge" hidden>
+<div class="intro"><div><p class="kicker"><span></span> LOCAL KNOWLEDGE</p><h1>Knowledge web<span>.</span></h1><p>Explore the dataset catalog and connect your verified findings.</p></div><a class="outline" href="https://github.com/awesomedata/awesome-public-datasets" target="_blank" rel="noopener noreferrer">Upstream catalog ↗</a></div>
+<div class="split knowledge"><section class="panel padded"><h2>Topic map</h2><p id="map-info"></p><div class="map-toolbar"><span>Drag to explore. Select a topic to see its sources.</span><div><button class="quiet" id="graph-zoom-out" aria-label="Zoom out">−</button><button class="quiet" id="graph-zoom-in" aria-label="Zoom in">+</button><button class="quiet" id="graph-reset">Reset</button></div></div><svg id="graph" viewBox="0 0 640 385" role="group" aria-label="Interactive Knowledge Web"></svg><label class="field">Explore a node<select id="topic"></select></label></section>
+<section class="panel padded"><h2 id="topic-heading">Catalog</h2><label class="field">Filter titles<input id="topic-filter" type="search" placeholder="Dataset title or keyword"></label><div id="datasets" class="sources"></div><div class="row"><button class="quiet" id="next-data">Show more</button></div><form id="note-form" class="memory-form"><label for="note">Add to owner memory</label><input id="note" placeholder="A finding or project note…" maxlength="600" required><button class="outline">Save note</button></form></section></div></div>
+<div class="page" id="workshop" hidden>
+<div class="intro"><div><p class="kicker"><span></span> OPERATOR TOOLS</p><h1>Workshop<span>.</span></h1><p>Ask for code suggestions, open sources, and review diagnostic commands.</p></div></div>
+<div class="split"><section class="panel padded"><h2>Improvement proposals</h2><p>CASSIE can read one selected app file and draft a proposal. Review the diff before applying anything in your terminal.</p><form id="review-form" class="memory-form"><label for="review-target">File</label><select id="review-target"><option value="persona">Personality prompt</option><option value="dashboard">Dashboard styles</option><option value="module">Module diagnostics</option></select><label for="review">Proposed change</label><textarea id="review" maxlength="1600" required placeholder="What should CASSIE improve?"></textarea><button class="outline" id="review-submit">Draft proposal</button></form><pre id="review-result" aria-live="polite"></pre><hr><h2>Quarantine inbox</h2><p>Isolate a file from CASSIE’s staging inbox without deleting it. Use a local terminal for any system-wide response.</p><div id="inbox"></div></section>
+<section class="panel padded"><h2>Operator terminal</h2><p>Use the Ubuntu terminal on TitanGame. These commands read service status and logs.</p><pre id="diagnostic">systemctl status cassie-os cassie-os-model --no-pager
+journalctl -u cassie-os -n 30 --no-pager</pre><button class="outline" id="copy">Copy commands</button><hr><h2>Source browser</h2><p>Open public sources in a separate browser tab. Chromium can be used for the console and its sources.</p><form id="browser-form" class="memory-form"><label for="browser-url">Public HTTPS address</label><input id="browser-url" type="url" placeholder="https://example.org" required><button class="outline">Open source ↗</button></form><hr><h2>Personality &amp; data</h2><form class="memory-form" id="profile-form"><label for="tone">Tone</label><select id="tone"><option value="adaptive">Adaptive</option><option value="casual">Casual</option><option value="warm">Warm</option><option value="technical">Technical</option></select><label for="style">Your preferences</label><input id="style" maxlength="500" placeholder="Dry wit, concise answers…"><button class="outline">Save personality preferences</button></form><div class="row"><button class="quiet" id="export">Export chat and memory</button><button class="quiet" id="clear">Clear conversation</button></div></section></div></div>
+<footer><span>CASSIE OS / TITANGAME</span><span>COMMAND INTERFACE <b>01</b></span></footer>
+</main>
+</div>
+<div id="always-home"><aside class="panel observing-card" id="always-dock" aria-label="Always-on camera" hidden>
+<div class="panel-head"><span><b class="dot"></b> <span id="always-state">Camera starting</span></span><button class="quiet" id="always-stop">Stop camera</button></div>
+<div class="observing-feed"><canvas id="always-image" aria-label="Live camera view with labeled object outlines" hidden></canvas><span id="always-wait">Starting the camera.</span></div>
+</aside></div>
+<dialog id="clear-dialog" aria-labelledby="clear-title">
+<form id="clear-form">
+<h2 id="clear-title">Clear conversation?</h2>
+<p>Delete all saved chat turns on this device. Your saved memories, preferences, and datasets will stay available.</p>
+<div class="row"><button class="quiet" id="clear-cancel" type="button" autofocus>Cancel</button><button class="outline" id="clear-confirm" type="submit">Clear conversation</button></div>
+<p id="clear-error" role="status"></p>
+</form>
+</dialog>
+<dialog id="unlock"><form id="unlock-form"><p class="kicker">OWNER CONSOLE</p><h2>Unlock CASSIE</h2><p>Enter the local access token from TitanGame.</p><input id="key" aria-label="CASSIE access token" type="password" required autocomplete="off"><button class="outline" type="submit">Unlock</button><p id="login-error" role="status"></p></form></dialog>
+<div id="toast" role="status"></div>
+<script src="app.js"></script>
+</body></html>

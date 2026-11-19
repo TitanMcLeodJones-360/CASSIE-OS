@@ -1,0 +1,47 @@
+# Python environments and caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+.coverage
+htmlcov/
+
+# Local credentials, conversations, and runtime state
+.env
+.env.*
+!.env.example
+*.token
+*.key
+*.pem
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-*
+*.log
+watched-devices.json
+always-camera.enabled
+
+# Downloaded runtimes, model weights, and build output
+node_modules/
+models/
+weights/
+*.gguf
+*.onnx
+*.caffemodel
+output/
+dist/
+build/
+*.zip
+*.tar.gz
+*.tar.zst
+
+# Editor and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*~

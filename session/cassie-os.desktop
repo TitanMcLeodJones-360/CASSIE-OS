@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=CASSIE OS
+Comment=Start TitanGame in the full-screen CASSIE desktop
+Exec=/usr/local/bin/cassie-desktop-session
+TryExec=/usr/local/bin/cassie-desktop-session
+Type=Application

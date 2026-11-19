@@ -1,0 +1,11 @@
+* text=auto
+*.sh text eol=lf
+*.py text eol=lf
+*.js text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.service text eol=lf
+*.desktop text eol=lf
+session/cassie-desktop-session text eol=lf
+open-cassie text eol=lf
+*.webp binary

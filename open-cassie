@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Use at TitanGame's desktop, or after making the local tunnel on a workstation.
+set -eu
+for browser in chromium chromium-browser; do
+    if command -v "$browser" >/dev/null; then
+        exec "$browser" 'http://127.0.0.1:8787/'
+    fi
+done
+printf '%s\n' 'Chromium is not installed. Open http://127.0.0.1:8787 in your browser.'

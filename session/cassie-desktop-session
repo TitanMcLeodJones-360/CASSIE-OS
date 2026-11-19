@@ -1,0 +1,15 @@
+#!/bin/sh
+# Invoked by GDM as the account signing in.
+set -eu
+if [ "$(id -u)" -eq 0 ] || [ -z "${DISPLAY:-}" ]; then
+    printf '%s\n' 'Start CASSIE OS from the graphical login screen as a normal user.' >&2
+    exit 1
+fi
+export XDG_CURRENT_DESKTOP=CASSIE XDG_SESSION_DESKTOP=cassie-os
+# Let socket-activated desktop services see this session's X server.
+if [ -n "${XAUTHORITY:-}" ]; then
+    dbus-update-activation-environment --systemd DISPLAY XAUTHORITY XDG_CURRENT_DESKTOP || :
+else
+    dbus-update-activation-environment --systemd DISPLAY XDG_CURRENT_DESKTOP || :
+fi
+exec /usr/bin/python3 /opt/cassie-os/desktop/session.py

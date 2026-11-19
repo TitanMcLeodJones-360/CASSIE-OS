@@ -1,0 +1,25 @@
+[Unit]
+Description=CASSIE OS local assistant console
+After=cassie-os-model.service
+Wants=cassie-os-model.service
+
+[Service]
+User=cassie-os
+Group=cassie-os
+SupplementaryGroups=video
+StateDirectory=cassie-os
+StateDirectoryMode=0700
+WorkingDirectory=/opt/cassie-os/app
+Environment=CASSIE_STATE_DIR=/var/lib/cassie-os
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/usr/bin/python3 /opt/cassie-os/app/server.py
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+UMask=0077
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
