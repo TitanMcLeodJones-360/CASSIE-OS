@@ -17,7 +17,7 @@ This package is the application and its service definitions for Ubuntu 24.04 LTS
 
 **Ω Red — integrity failure.** The console reports local database corruption or a release-file change. Workshop offers an operator-confirmed quarantine action for an ordinary single-link file in the app's staging inbox. It moves the file to a private directory with owner-read-only permissions and no executable bit. It never deletes the original data, runs it, attempts to neutralize a remote system, or touches other directories. Manual code edits intentionally trip the file hash check until you review and refresh the release baseline. A clean integrity check is not a clean bill of health.
 
-**Δ Yellow — new or possibly missing device.** The app samples the configured CASSIE-NET interface every 20 seconds and reads only its reachable neighbor addresses, not network packets or device content. A newly observed device stays yellow for five minutes; a device you've chosen to watch is marked missing after 15 minutes without observation. Idle clients can go quiet. This is not a client inventory, location tracker, or authentication mechanism.
+**Δ Yellow — new or possibly missing device.** The app samples reachable neighbor addresses on the configured CASSIE-NET interface every 20 seconds. A newly observed device stays yellow for five minutes; a device you've chosen to watch is marked missing after 15 minutes without observation. Idle clients can go quiet. This is not a client inventory, location tracker, or authentication mechanism. Optional activity collection is configured separately for selected devices.
 
 **γ Green — happy expression.** Changes the orb's expression; it has no effect on security or monitoring. An actual red signal takes precedence over yellow and green, and yellow takes precedence over green.
 
@@ -67,6 +67,16 @@ Deliberately stage only files you want reviewed. Workshop displays the resulting
 
 Logs: `sudo journalctl -u cassie-os -u cassie-os-model -n 80 --no-pager`.
 The included `build_preview.py` writes the standalone preview and release baseline from source. Only rebuild and apply the baseline after reviewing the changed files. Dataset source and its license are included under `app/`.
+
+## Hotspot activity
+
+The optional device activity view records visible DNS lookups and approximate sent/received IP byte totals for individually selected hotspot devices. Install it with `sudo bash update-desktop.sh --app-only`, then open **CASSIE-NET → Track activity** beside an observed device. Configure `CASSIE_HOTSPOT_INTERFACE` on the web service as described above. Collection starts only after a device is selected.
+
+Activity records stay in local SQLite for up to seven days with bounded record counts. The dashboard includes device filtering, pause/resume, stop tracking, and a confirmed clear-history action. Closing or locking the dashboard leaves enabled collection running. Clear activity history is separate from Clear conversation.
+
+Domain records are unencrypted DNS questions over UDP, including background requests. They are not verified browsing visits or a list of foreground apps. HTTPS page paths and contents are unavailable. Encrypted DNS, VPNs, and cached names can hide domain activity. See [START-HERE.md](START-HERE.md#track-your-hotspot-devices) for setup, limits, and troubleshooting.
+
+The separate `cassie-os-network.service` runs the bundled Python collector with `CAP_NET_RAW`, binds to the configured interface, and discards packet bytes after extracting metadata. It does not enable promiscuous mode, redirect DNS, decrypt traffic, install certificates, change hotspot settings, or change firewall rules. The web service retains its existing capabilities.
 
 ## Development
 

@@ -74,7 +74,15 @@
 <div class="module-grid" id="module-grid"></div></div>
 <div class="page" id="network" hidden>
 <div class="intro"><div><p class="kicker"><span></span> OWNER NETWORK</p><h1>CASSIE-NET<span>.</span></h1><p>Check for authorized devices on the hotspot.</p></div></div>
-<section class="panel padded"><div class="row"><h2>Observed neighbors</h2><span class="chip" id="network-status">UNCONFIGURED</span></div><p>Device addresses and presence come from the configured hotspot interface. Sleeping devices may go quiet. The console does not read clients’ traffic or files.</p><div id="network-list"></div></section></div>
+<section class="panel padded"><div class="row"><h2>Observed neighbors</h2><span class="chip" id="network-status">UNCONFIGURED</span></div><p>Device addresses and presence come from the configured hotspot interface. Sleeping devices may go quiet. Select Track activity for each device you own or have permission to observe.</p><div id="network-list"></div></section>
+<section class="panel padded network-activity"><div class="row"><h2>Device activity</h2><span class="chip" id="activity-state">OFF</span></div>
+<p id="activity-detail" role="status">Select Track activity beside one of your devices.</p>
+<p class="muted">Domain lookups can come from background apps. They do not prove you opened a website. Encrypted DNS, VPNs, and cached names can hide domains. Exact pages, messages, and foreground apps are unavailable.</p>
+<div class="row"><button class="outline" id="activity-toggle" disabled>Resume collection</button><button class="quiet" id="activity-clear">Clear activity history</button><button class="quiet" id="activity-refresh">Refresh activity</button></div>
+<label class="field">Device<select id="activity-device"><option value="">All recorded devices</option></select></label>
+<p class="muted">History stays on this PC for up to seven days. Busy networks can reach the record limit sooner. Traffic totals are approximate IP bytes.</p>
+<div id="activity-totals" class="activity-totals"></div>
+<h3>Recent domain lookups</h3><div id="activity-domains" class="activity-domains" aria-live="polite"></div></section></div>
 <div class="page" id="knowledge" hidden>
 <div class="intro"><div><p class="kicker"><span></span> LOCAL KNOWLEDGE</p><h1>Knowledge web<span>.</span></h1><p>Explore the dataset catalog and connect your verified findings.</p></div><a class="outline" href="https://github.com/awesomedata/awesome-public-datasets" target="_blank" rel="noopener noreferrer">Upstream catalog ↗</a></div>
 <div class="split knowledge"><section class="panel padded"><h2>Topic map</h2><p id="map-info"></p><div class="map-toolbar"><span>Drag to explore. Select a topic to see its sources.</span><div><button class="quiet" id="graph-zoom-out" aria-label="Zoom out">−</button><button class="quiet" id="graph-zoom-in" aria-label="Zoom in">+</button><button class="quiet" id="graph-reset">Reset</button></div></div><svg id="graph" viewBox="0 0 640 385" role="group" aria-label="Interactive Knowledge Web"></svg><label class="field">Explore a node<select id="topic"></select></label></section>
@@ -100,6 +108,7 @@ journalctl -u cassie-os -n 30 --no-pager</pre><button class="outline" id="copy">
 </form>
 </dialog>
 <dialog id="unlock"><form id="unlock-form"><p class="kicker">OWNER CONSOLE</p><h2>Unlock CASSIE</h2><p>Enter the local access token from TitanGame.</p><input id="key" aria-label="CASSIE access token" type="password" required autocomplete="off"><button class="outline" type="submit">Unlock</button><p id="login-error" role="status"></p></form></dialog>
+<dialog id="activity-clear-dialog" aria-labelledby="activity-clear-title"><form id="activity-clear-form"><h2 id="activity-clear-title">Clear network activity?</h2><p>Delete recorded domain lookups and traffic totals for every device. Tracking selections stay saved. Collection continues if it is on.</p><div class="row"><button class="quiet" id="activity-clear-cancel" type="button">Cancel</button><button class="outline" id="activity-clear-confirm" type="submit">Clear history</button></div><p id="activity-clear-error" role="status"></p></form></dialog>
 <div id="toast" role="status"></div>
 <script src="app.js"></script>
 </body></html>

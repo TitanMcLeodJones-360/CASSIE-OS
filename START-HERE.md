@@ -86,3 +86,28 @@ Select **Clear conversation** in Command or Workshop and confirm. You can also s
 Ordinary conversation starts with the answer. For a research request, CASSIE also explains the sources she used, how she checked or compared them, and what still needs verification.
 
 For an exact line, type or say **Say “The rover is ready.”** CASSIE replies and speaks **The rover is ready.** For typed commands, quotes preserve capitalization and punctuation. For spoken commands, the line comes from the microphone transcript.
+
+## Track your hotspot devices
+
+From this release's extracted folder, run `sudo bash update-desktop.sh --app-only`. Reopen the dashboard after the update.
+
+Set the hotspot interface once with `sudo systemctl edit cassie-os`. Above the editor's discard marker, add the following using the interface that runs CASSIE-NET. For the current desktop this is `wlp10s0`.
+
+```ini
+[Service]
+Environment=CASSIE_HOTSPOT_INTERFACE=wlp10s0
+```
+
+Run `sudo systemctl daemon-reload` and `sudo systemctl restart cassie-os`. An existing interface override stays in place during updates.
+
+Connect your devices to the hotspot. In **CASSIE-NET**, select **Track activity** beside each device you own or have permission to observe. **Device activity** refreshes every five seconds and shows approximate sent/received IP bytes and visible domain lookups. Choose a device to filter the recent results. A domain lookup can be made by a background app and does not prove someone opened a website.
+
+Ask **“Show network activity”** or type **`/activity`** for a factual summary from these local records, even if Ollama is unavailable. A summary saved in chat remains in chat until you clear that conversation, independently of clearing the activity database.
+
+The collector sees conventional unencrypted DNS queries over UDP port 53. Encrypted DNS, VPNs, cached results, and DNS over TCP can leave gaps. It cannot show exact HTTPS pages, messages, passwords, or which app is on screen. Randomized device MAC addresses can appear as separate devices and require selecting again.
+
+History stays in the local SQLite database for up to seven days, with a maximum of 50,000 domain records and 30,000 traffic records. Busy networks may reach these limits sooner. **Pause collection** pauses all selected devices; **Stop tracking activity** removes one device from collection. **Clear activity history** deletes recorded activity for every device after confirmation. Saved selections remain, so pause first if you want the history to stay empty. Clearing chat and clearing network activity are separate actions.
+
+Collection continues while the dashboard is locked or closed if enabled. It resumes with saved selections after reboot. The separate `cassie-os-network.service` has packet-socket access limited by its capability configuration. The web service does not receive this capability. No packet captures or page contents are saved. No DNS redirection, certificate installation, or firewall changes are made.
+
+If Device activity says the collector is unavailable, check `sudo journalctl -u cassie-os-network -n 40 --no-pager`. If the hotspot has no Ethernet-style packet framing, the collector reports it as unavailable. Actual wireless-adapter capture behavior must be checked on the target PC.

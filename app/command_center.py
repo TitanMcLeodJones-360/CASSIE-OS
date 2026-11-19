@@ -18,11 +18,12 @@ import time
 import uuid
 
 from PIL import Image
+from network_activity import Activity
 
 ROOT = Path(__file__).resolve().parent
 MAC = re.compile(r"(?i)[0-9a-f]{2}(?::[0-9a-f]{2}){5}")
 IFACE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,14}")
-ASSETS = ("command_center.py", "server.py", "observer.py", "speech.py", "base_persona.txt", "static/app.js", "static/mic-worklet.js", "static/style.css", "static/index.html", "static/insignia.webp", "dataset_catalog.json", "dataset_search.py")
+ASSETS = ("command_center.py", "server.py", "observer.py", "speech.py", "network_activity.py", "base_persona.txt", "static/app.js", "static/mic-worklet.js", "static/style.css", "static/index.html", "static/insignia.webp", "dataset_catalog.json", "dataset_search.py")
 VOC = ("background", "airplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat",
        "chair", "cow", "dining table", "dog", "horse", "motorcycle", "person",
        "potted plant", "sheep", "sofa", "train", "TV monitor")
@@ -41,6 +42,7 @@ class Monitor:
         self.lock = threading.RLock()
         self.integrity = {"state": "unknown", "detail": "The first integrity check is pending."}
         self.interface = os.environ.get("CASSIE_HOTSPOT_INTERFACE", "")
+        self.activity = Activity(store.root, self.interface)
         self.devices = {}
         self.watched = set()
         self.netpath = store.root/"watched-devices.json"
@@ -120,15 +122,16 @@ class Monitor:
 
     def network(self):
         now = int(time.time())
+        tracked = set(self.activity.settings()["devices"])
         with self.lock:
             entries = []
-            for mac in self.watched | self.devices.keys():
+            for mac in self.watched | self.devices.keys() | tracked:
                 row = self.devices.get(mac, {})
                 first, last = row.get("first_seen"), row.get("last_seen")
                 watched = mac in self.watched
                 state = ("awaiting observation" if last is None else "missing" if watched and now-last>900
                          else "new" if now-first<300 else "seen" if now-last<180 else "last seen")
-                entries.append({"mac":mac,"ip":row.get("ip",mac),"state":state,"watched":watched,"last_seen":last})
+                entries.append({"mac":mac,"ip":row.get("ip",mac),"state":state,"watched":watched,"tracked":mac in tracked,"last_seen":last})
             entries.sort(key=lambda x: (not x["watched"], -(x["last_seen"] or 0), x["mac"]))
             return {"configured":bool(self.interface),"error":self.network_error,"devices":entries}
 

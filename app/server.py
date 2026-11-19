@@ -16,6 +16,7 @@ import subprocess
 import threading
 from urllib.request import Request, ProxyHandler, HTTPRedirectHandler, build_opener
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlsplit, parse_qs
 
 from PIL import Image, UnidentifiedImageError
 import dataset_search
@@ -444,11 +445,27 @@ def exact_line(text):
     return line
 
 
-def respond(store, data, on_delta=None, observer=None):
+def respond(store, data, on_delta=None, observer=None, activity=None):
     text=required_text(data.get("text"),MAX_TEXT)
     line = exact_line(text)
     if line is not None:
         return {**store.record(text, line, [], False), "verbatim": True}
+    if activity is not None and (text.strip().lower()=="/activity" or
+            re.search(r"\b(?:show|check|read|summarize)\b.{0,30}\b(?:network|hotspot) activity\b|"
+                      r"\bwhat (?:am i|are my devices) (?:on|using|browsing)\b",text,re.I)):
+        snapshot=activity.snapshot()
+        if not snapshot["tracked"]:
+            reply="Select Track activity beside your devices in CASSIE-NET first."
+        else:
+            reply=("Collection is on. " if snapshot["enabled"] else "Collection is paused. ") + snapshot["detail"]
+            if snapshot["domains"]:
+                reply+="\n\nLatest recorded DNS lookups, which can come from background apps:\n"
+                reply+="\n".join(f'{r["mac"]}: {r["domain"]} at '+datetime.fromtimestamp(r["last_seen"],timezone.utc).strftime("%H:%M UTC")
+                                 for r in snapshot["domains"][:8])
+            else:
+                reply+=" No visible domain lookups have been recorded yet."
+            reply+="\n\nThese records do not identify exact pages or the app on your screen. Encrypted DNS and VPNs can hide domains."
+        return store.record(text,reply,[],False)
     if request := REMEMBER.fullmatch(text):
         note = required_text(request.group(1), 600)
         saved = store.save_memory(note)
@@ -548,6 +565,7 @@ class App(ThreadingHTTPServer):
         self.store=store
         super().__init__(address, Handler)
         self.monitor=command_center.Monitor(store)
+        self.activity=self.monitor.activity
         self.observer=Observer(store.root)
 
     def server_close(self):
@@ -605,7 +623,7 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(update, ensure_ascii=False).encode() + b"\n")
 
         try:
-            send({"reply": respond(store, data, lambda part: send({"delta": part}), self.server.observer)})
+            send({"reply": respond(store, data, lambda part: send({"delta": part}), self.server.observer, self.server.activity)})
         except (RuntimeError, ValueError) as error:
             send({"error": str(error)})
         except sqlite3.Error:
@@ -641,6 +659,15 @@ class Handler(BaseHTTPRequestHandler):
             return
         if not self.gate(): return
         store=self.server.store
+        if urlsplit(path).path=="/api/network/activity":
+            try:
+                query=parse_qs(urlsplit(path).query)
+                self.reply(self.server.activity.snapshot(query.get("mac",[None])[0]))
+            except ValueError as exc:
+                self.reply({"error":str(exc)},400)
+            except sqlite3.Error:
+                self.reply({"error":"Network activity storage is busy or unavailable."},503)
+            return
         if path=="/api/session":
             self.reply({"chat":store.chat(),"notes":store.memory(),"profile":store.profile()})
         elif path=="/api/command":
@@ -688,7 +715,7 @@ class Handler(BaseHTTPRequestHandler):
                         self.chat_stream(store, data)
                     else:
                         try:
-                            self.reply(respond(store,data,observer=self.server.observer))
+                            self.reply(respond(store,data,observer=self.server.observer,activity=self.server.activity))
                         except RuntimeError as e:
                             self.reply({"error":str(e)},503)
                 finally:
@@ -696,6 +723,22 @@ class Handler(BaseHTTPRequestHandler):
             elif self.path=="/api/watch":
                 self.server.monitor.watch(data.get("mac"),data.get("watched"))
                 self.reply({"ok":True})
+            elif self.path=="/api/network/activity":
+                action=data.get("action")
+                if action=="track":
+                    mac=data.get("mac")
+                    if data.get("tracked") is True:
+                        with self.server.monitor.lock:
+                            if not isinstance(mac,str) or mac not in self.server.monitor.devices:
+                                raise ValueError("Choose a device observed on your hotspot first.")
+                    self.server.activity.select(mac,data.get("tracked"))
+                elif action=="enable":
+                    self.server.activity.enable(data.get("enabled"))
+                elif action=="clear":
+                    self.server.activity.clear()
+                else:
+                    raise ValueError("Choose a valid network activity action.")
+                self.reply(self.server.activity.snapshot())
             elif self.path=="/api/quarantine":
                 self.reply(self.server.monitor.quarantine(data.get("name")))
             elif self.path=="/api/voice":

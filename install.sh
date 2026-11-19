@@ -51,13 +51,13 @@ for group in video render; do
     if getent group "$group" >/dev/null; then usermod -aG "$group" cassie-model; fi
 done
 install -d -m 0755 "$root/app/static"
-for file in server.py command_center.py observer.py speech.py integrity.json dataset_search.py dataset_catalog.json LICENSE-Awesome-Public-Datasets.txt base_persona.txt; do
+for file in server.py command_center.py observer.py speech.py network_activity.py integrity.json dataset_search.py dataset_catalog.json LICENSE-Awesome-Public-Datasets.txt base_persona.txt; do
     install -m 0644 "app/$file" "$root/app/$file"
 done
 for file in index.html style.css app.js insignia.webp mic-worklet.js; do
     install -m 0644 "app/static/$file" "$root/app/static/$file"
 done
-install -m 0644 systemd/cassie-os.service systemd/cassie-os-model.service /etc/systemd/system/
+install -m 0644 systemd/cassie-os.service systemd/cassie-os-model.service systemd/cassie-os-network.service /etc/systemd/system/
 systemctl daemon-reload
 systemctl restart cassie-os-model.service
 for attempt in {1..35}; do
@@ -114,7 +114,8 @@ for attempt in {1..12}; do
 done
 systemctl is-active --quiet cassie-os.service
 curl --disable --noproxy '*' -fsS --max-time 5 http://127.0.0.1:8787/api/health >/dev/null
-systemctl enable cassie-os-model.service cassie-os.service
+systemctl enable cassie-os-model.service cassie-os.service cassie-os-network.service
+systemctl restart cassie-os-network.service
 if ! nvidia-smi --query-gpu=name,driver_version --format=csv,noheader 2>/dev/null; then
     echo 'NVIDIA status unavailable. CASSIE passed the model test, but may be running on CPU. See README.md for driver setup.'
 fi

@@ -28,7 +28,7 @@ def main():
     payload = json.dumps(demo,ensure_ascii=True,separators=(",",":")).replace("<",r"\u003c")
     text = text.replace('<script src="app.js"></script>','<script>window.CASSIE_PREVIEW='+payload+';\n'+(static/"app.js").read_text()+'\n</script>')
     (out/"CASSIE-Command-Preview.html").write_text(text)
-    names = ("command_center.py","server.py","observer.py","speech.py","base_persona.txt","static/app.js","static/mic-worklet.js","static/style.css","static/index.html","static/insignia.webp","dataset_catalog.json","dataset_search.py")
+    names = ("command_center.py","server.py","observer.py","speech.py","network_activity.py","base_persona.txt","static/app.js","static/mic-worklet.js","static/style.css","static/index.html","static/insignia.webp","dataset_catalog.json","dataset_search.py")
     (app/"integrity.json").write_text(json.dumps({name:hashlib.sha256((app/name).read_bytes()).hexdigest() for name in names},indent=2)+"\n")
 
 if __name__=="__main__":

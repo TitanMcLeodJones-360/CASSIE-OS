@@ -4,6 +4,7 @@ const el=(tag,value='',cls='')=>{const n=document.createElement(tag);n.textConte
 let token='', page='command', live=null, notes=[], catalog=[], topic='', more=10, simulated='nominal', expression='nominal', busy=false;
 let camera=null,cameraRun=0,cameraBusy=false,mic=null,listening=false,audio=null,spoken=false,conversationUntil=0;
 let lastScene='',lastSceneAt=0,toastStop=0,catalogInfo=null,clearing=false;
+let activityData=null,activityLoading=false,activityChanging=false,activityEpoch=0;
 let alwaysEnabled=false,alwaysBusy=false,alwaysPoll=false,alwaysEpoch=0,observerStream=null;
 let chatAbort=null,micRequest=null,micEpoch=0,micStarting=false,recording=false;
 const CONVERSATION_MS=45_000;
@@ -85,6 +86,7 @@ function setPage(value){
   placeObserver();
   if(value==='knowledge')renderKnowledge();
   if(value==='workshop')loadInbox();
+  if(value==='network')loadActivity();
   if(value==='command'&&reduced.matches)drawOrb(0);
   scrollTo(0,0);
 }
@@ -232,7 +234,8 @@ function network(){
  if(!n.devices.length){list.append(el('p','No neighbors observed yet. A quiet device can go unseen; this is not a definitive connected-client list.'));return;}
  for(const d of n.devices){
    const row=el('div','','network-item');row.append(el('strong',d.name||d.ip),el('span',d.mac+' · '+d.state+' · '+(d.last_seen?new Date(d.last_seen*1000).toLocaleString():'no recent observation')));
-   if(!demo){const b=el('button',d.watched?'Stop watching':'Watch for absence','quiet');b.onclick=async()=>{try{await api('watch',{mac:d.mac,watched:!d.watched});await refresh();}catch(e){toast(e.message);}};row.append(b);}
+   if(!demo){const actions=el('div','','row');const b=el('button',d.watched?'Stop watching':'Watch for absence','quiet');b.onclick=async()=>{try{await api('watch',{mac:d.mac,watched:!d.watched});await refresh();}catch(e){toast(e.message);}};actions.append(b);
+    const track=el('button',d.tracked?'Stop tracking activity':'Track activity','outline');track.onclick=()=>changeActivity({action:'track',mac:d.mac,tracked:!d.tracked});actions.append(track);row.append(actions);}
    list.append(row);
  }
 }
@@ -244,6 +247,64 @@ async function refresh(){
  finally{refreshing=false;}
 }
 $('refresh').onclick=refresh;
+function trafficBytes(value){
+ if(value<1024)return value+' B';if(value<1024**2)return (value/1024).toFixed(1)+' KiB';
+ if(value<1024**3)return (value/1024**2).toFixed(1)+' MiB';return (value/1024**3).toFixed(2)+' GiB';
+}
+function renderActivity(){
+ const data=activityData;if(!data)return;
+ $('activity-state').textContent=data.state.toUpperCase();$('activity-detail').textContent=data.detail;
+ $('activity-toggle').textContent=data.enabled?'Pause collection':'Resume collection';
+ $('activity-toggle').disabled=demo||!data.tracked.length||activityChanging;
+ $('activity-clear').disabled=demo||activityChanging;
+ const selected=$('activity-device').value;
+ const devices=new Set([...data.tracked,...data.totals.map(r=>r.mac),...data.domains.map(r=>r.mac)]);
+ const picker=$('activity-device');picker.replaceChildren(new Option('All recorded devices',''));
+ for(const mac of [...devices].sort()){
+  const observed=live?.network?.devices?.find(r=>r.mac===mac);
+  picker.append(new Option((observed?.name||observed?.ip||mac)+(observed&&observed.ip!==mac?' · '+mac:''),mac));
+ }
+ if(devices.has(selected))picker.value=selected;
+ const chosen=picker.value;
+ const totals=$('activity-totals');totals.replaceChildren();
+ for(const row of data.totals.filter(r=>!chosen||r.mac===chosen)){
+  const box=el('div','','network-item');box.append(el('strong',row.mac),el('span','Sent '+trafficBytes(row.sent)+' · Received '+trafficBytes(row.received)));totals.append(box);
+ }
+ if(!totals.childElementCount)totals.append(el('p','No traffic totals recorded for this device yet.','muted'));
+ const list=$('activity-domains');list.replaceChildren();
+ for(const row of data.domains.filter(r=>!chosen||r.mac===chosen)){
+  const box=el('div','','network-item');box.append(el('strong',row.domain),el('span',row.mac+' · '+new Date(row.last_seen*1000).toLocaleString()+' · '+row.queries+' DNS '+(row.queries===1?'query':'queries')));list.append(box);
+ }
+ if(!list.childElementCount)list.append(el('p','No visible DNS lookups recorded. The device may use encrypted DNS, cached names, or a VPN.','muted'));
+}
+async function loadActivity(){
+ if(demo){activityData={enabled:false,state:'simulated',detail:'Activity collection is available on the Ubuntu installation.',tracked:[],totals:[],domains:[]};renderActivity();return;}
+ if(!token||activityLoading)return;activityLoading=true;const session=token,epoch=activityEpoch;
+ try{const result=await api('network/activity',undefined,AbortSignal.timeout(10000));if(token===session&&epoch===activityEpoch){activityData=result;renderActivity();}}
+ catch(e){if(token===session&&epoch===activityEpoch){$('activity-state').textContent='UNAVAILABLE';$('activity-detail').textContent=e.message;}}
+ finally{activityLoading=false;}
+}
+async function changeActivity(data){
+ if(demo||!token||activityChanging)return;activityChanging=true;const session=token;const epoch=++activityEpoch;
+ renderActivity();
+ try{const result=await api('network/activity',data);if(token===session&&epoch===activityEpoch){activityData=result;renderActivity();await refresh();}}
+ catch(e){if(token===session)toast(e.message);}
+ finally{activityChanging=false;if(token===session)renderActivity();}
+}
+$('activity-toggle').onclick=()=>changeActivity({action:'enable',enabled:!activityData?.enabled});
+$('activity-device').onchange=renderActivity;
+$('activity-refresh').onclick=()=>{loadActivity();refresh();};
+$('activity-clear').onclick=()=>{if(!demo){$('activity-clear-error').textContent='';$('activity-clear-dialog').showModal();}};
+$('activity-clear-cancel').onclick=()=>$('activity-clear-dialog').close();
+$('activity-clear-dialog').addEventListener('cancel',event=>{if(activityChanging)event.preventDefault();});
+$('activity-clear-form').onsubmit=async event=>{
+ event.preventDefault();if(activityChanging)return;const session=token;const epoch=++activityEpoch;
+ activityChanging=true;$('activity-clear-confirm').disabled=true;$('activity-clear-cancel').disabled=true;
+ try{const result=await api('network/activity',{action:'clear'});if(token===session&&epoch===activityEpoch){activityData=result;renderActivity();$('activity-clear-dialog').close();}}
+ catch(e){if(token===session)$('activity-clear-error').textContent=e.message;}
+ finally{activityChanging=false;$('activity-clear-confirm').disabled=false;$('activity-clear-cancel').disabled=false;if(token===session)renderActivity();}
+};
+setInterval(()=>{if(page==='network'&&!document.hidden)loadActivity();},5000);
 const NS='http://www.w3.org/2000/svg';
 function svg(name,attrs){const n=document.createElementNS(NS,name);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,v);return n;}
 const graph=$('graph'),graphNodes=new Map();
@@ -752,6 +813,8 @@ $('unlock-form').onsubmit=async e=>{e.preventDefault();token=$('key').value.trim
  try{await enter();$('key').value='';}catch(error){token='';$('login-error').textContent=error.message;}
 };
 $('lock').onclick=()=>{token='';live=null;notes=[];catalog=[];catalogInfo=null;expression='nominal';spoken=false;
+ activityEpoch++;activityData=null;$('activity-totals').replaceChildren();$('activity-domains').replaceChildren();$('activity-device').replaceChildren(new Option('All recorded devices',''));$('activity-state').textContent='LOCKED';$('activity-detail').textContent='Unlock to view network activity.';
+ if($('activity-clear-dialog').open)$('activity-clear-dialog').close();
  if($('clear-dialog').open)$('clear-dialog').close();
  chatAbort?.abort();chatAbort=null;busy=false;$('send').disabled=false;
  if(audio){audio.pause();audio.dispatchEvent(new Event('ended'));}

@@ -54,3 +54,8 @@ body:has(#always-home .observing-card:not([hidden])) .main{padding-bottom:235px}
 #clear-dialog p{color:var(--muted);font-size:13px;line-height:1.5}
 #clear-dialog #clear-error{color:var(--yellow);margin:0}
 #clear-dialog .row{justify-content:flex-end}
+.network-activity{margin-top:16px}
+.activity-domains{max-height:420px;overflow:auto}
+.activity-totals{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:18px}
+.activity-domains strong{overflow-wrap:anywhere}
+#activity-clear-error{color:var(--yellow)}

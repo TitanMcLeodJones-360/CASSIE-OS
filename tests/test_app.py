@@ -43,6 +43,7 @@ def instance(tmp_path,monkeypatch):
             raw=res.read()
             return res.status,json.loads(raw) if res.getheader("Content-Type").startswith("application/json") else raw
         finally:connection.close()
+    call.app=app
     try:yield call,outbound,tmp_path
     finally:
         app.shutdown();worker.join();app.server_close()
@@ -55,6 +56,26 @@ def test_session_access_and_browser_origin(instance):
     assert call("/api/chat",{"text":"Hello"},origin="https://example.org")[0]==403
     assert call("/api/session",host_override="another.example")[0]==403
     assert not outbound
+
+
+def test_network_activity_requires_auth_and_an_observed_device(instance, monkeypatch):
+    call, _, path = instance
+    import network_activity
+    activity = network_activity.Activity(path, "wlp10s0")
+    mac = "02:11:22:33:44:55"
+    assert call("/api/network/activity", auth=False)[0] == 401
+    assert call("/api/network/activity", {"action":"track","mac":mac,"tracked":True}, auth=False)[0] == 401
+    assert call("/api/network/activity", {"action":"track","mac":mac,"tracked":True})[0] == 400
+    call.app.monitor.devices[mac]={"ip":"10.42.0.2","first_seen":1,"last_seen":1}
+    assert call("/api/network/activity", {"action":"track","mac":mac,"tracked":True})[0] == 200
+    code, snapshot = call("/api/network/activity")
+    assert code == 200 and snapshot["tracked"] == [mac]
+    code, answer = call("/api/chat", {"text":"/activity"})
+    assert code == 200 and "No visible domain lookups" in answer["content"]
+    assert call("/api/network/activity?mac=not-a-mac")[0] == 400
+    assert call("/api/network/activity", {"action":"enable","enabled":False})[1]["enabled"] is False
+    assert call("/api/network/activity", {"action":"clear"})[0] == 200
+    assert call("/api/network/activity", {"action":"track","mac":mac,"tracked":False})[1]["tracked"] == []
 
 
 @pytest.mark.parametrize(("command", "line"), [
