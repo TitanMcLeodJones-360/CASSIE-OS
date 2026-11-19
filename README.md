@@ -1,4 +1,4 @@
-# CASSIE OS · TitanGame Command Center
+# CASSIE OS · CASSIE Command Center
 
 Start with [START-HERE.md](START-HERE.md) to install the full-screen desktop session or update an existing installation.
 
